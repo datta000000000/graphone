@@ -19,6 +19,7 @@ const parsed = envSchema.safeParse(process.env);
 if (!parsed.success) {
   console.error('❌ Invalid environment variables:', JSON.stringify(parsed.error.format(), null, 2));
   process.exit(1);
+  throw new Error('Environment configuration validation failed');
 }
 
 export const env = parsed.data;
