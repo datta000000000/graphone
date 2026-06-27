@@ -5,6 +5,12 @@ import { rateLimiter } from './middleware/rateLimiter';
 import { errorHandler } from './middleware/errorHandler';
 import { sendSuccess } from './lib/response';
 
+import { companiesRouter } from './modules/companies/companies.router';
+import { investorsRouter } from './modules/investors/investors.router';
+import { productsRouter } from './modules/products/products.router';
+import { newsRouter } from './modules/news/news.router';
+import { statsRouter } from './modules/stats/stats.router';
+
 const app = express();
 
 // CORS configuration
@@ -26,7 +32,12 @@ app.get('/health', (req, res) => {
   sendSuccess(res, { status: 'healthy', timestamp: new Date().toISOString() });
 });
 
-// Mount modular routers here in future phases
+// Mount modular routers
+app.use('/api/v1/companies', companiesRouter);
+app.use('/api/v1/investors', investorsRouter);
+app.use('/api/v1/products', productsRouter);
+app.use('/api/v1/news', newsRouter);
+app.use('/api/v1/stats', statsRouter);
 
 // Global Error Handler (Must be registered last)
 app.use(errorHandler);
