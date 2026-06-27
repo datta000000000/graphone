@@ -1,0 +1,14 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --brand:       #E53935;
+  --brand-light: #FFEBEE;
+  --radius-card: 12px;
+}
+
+body {
+  background-color: #fafafa;
+  color: #111111;
+}
