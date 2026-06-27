@@ -63,4 +63,17 @@ export class CompaniesController {
       next(error);
     }
   };
+
+  /**
+   * GET /api/v1/companies/:slug/graph
+   */
+  getEcosystemGraph = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { slug } = req.params;
+      const data = await this.companiesService.getEcosystemGraph(slug);
+      sendSuccess(res, data);
+    } catch (error) {
+      next(error);
+    }
+  };
 }

@@ -17,6 +17,9 @@ router.get('/trending', controller.getTrending);
 // GET /api/v1/companies
 router.get('/', validate({ query: listCompaniesQuerySchema }), controller.list);
 
+// GET /api/v1/companies/:slug/graph
+router.get('/:slug/graph', validate({ params: companySlugParamsSchema }), controller.getEcosystemGraph);
+
 // GET /api/v1/companies/:slug
 router.get('/:slug', validate({ params: companySlugParamsSchema }), controller.findBySlug);
 

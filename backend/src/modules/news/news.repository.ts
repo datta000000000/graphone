@@ -52,4 +52,40 @@ export class NewsRepository {
       nextCursor,
     };
   }
+
+  /**
+   * Fetches trending news articles (most viewed in the last 24 hours, falling back to top viewed overall).
+   */
+  async getTrending(): Promise<NewsArticle[]> {
+    const twentyFourHoursAgo = new Date();
+    twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
+    const dateStr = twentyFourHoursAgo.toISOString();
+
+    const { data, error } = await supabase
+      .from('news_articles')
+      .select('*')
+      .gte('published_at', dateStr)
+      .order('view_count', { ascending: false })
+      .limit(5);
+
+    if (error) {
+      throw new AppError(`Failed to fetch trending news: ${error.message}`, 500);
+    }
+
+    // Fallback if no articles published in the last 24h
+    if (!data || data.length === 0) {
+      const { data: fallback, error: fallbackError } = await supabase
+        .from('news_articles')
+        .select('*')
+        .order('view_count', { ascending: false })
+        .limit(5);
+
+      if (fallbackError) {
+        throw new AppError(`Failed to fetch fallback trending news: ${fallbackError.message}`, 500);
+      }
+      return (fallback || []) as NewsArticle[];
+    }
+
+    return data as NewsArticle[];
+  }
 }

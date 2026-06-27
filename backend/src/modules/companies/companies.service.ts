@@ -53,4 +53,14 @@ export class CompaniesService {
     cache.del('companies:trending');
     return newCompany;
   }
+
+  /**
+   * Retrieves the ecosystem graph nodes and edges for a company by slug.
+   */
+  async getEcosystemGraph(slug: string): Promise<{
+    nodes: Array<{ id: string; name: string; type: string; logo_url?: string | null }>;
+    edges: Array<{ source: string; target: string }>;
+  }> {
+    return this.companiesRepository.getEcosystemGraph(slug);
+  }
 }

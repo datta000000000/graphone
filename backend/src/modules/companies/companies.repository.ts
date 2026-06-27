@@ -273,4 +273,77 @@ export class CompaniesRepository {
 
     return data as Company;
   }
+
+  /**
+   * Fetches the 1-hop ecosystem graph nodes and edges for a company by its slug.
+   */
+  async getEcosystemGraph(slug: string): Promise<{
+    nodes: Array<{ id: string; name: string; type: string; logo_url?: string | null }>;
+    edges: Array<{ source: string; target: string }>;
+  }> {
+    const { data: company, error: compErr } = await supabase
+      .from('companies')
+      .select('id, name, logo_url')
+      .eq('slug', slug)
+      .single();
+
+    if (compErr || !company) {
+      throw new AppError(`Company with slug "${slug}" not found`, 404, 'NOT_FOUND');
+    }
+
+    const companyId = company.id;
+
+    // Fetch products, investors, and competitors in parallel
+    const [productsRes, investorsRes, competitorsRes] = await Promise.all([
+      supabase
+        .from('products')
+        .select('id, name, logo_url')
+        .eq('company_id', companyId),
+      supabase
+        .from('investor_portfolio')
+        .select('investors (id, name, logo_url)')
+        .eq('company_id', companyId),
+      supabase
+        .from('competitor_relations')
+        .select('competitor:companies (id, name, logo_url)')
+        .eq('company_id', companyId),
+    ]);
+
+    const nodes: Array<{ id: string; name: string; type: string; logo_url?: string | null }> = [
+      { id: company.id, name: company.name, type: 'center', logo_url: company.logo_url }
+    ];
+    const edges: Array<{ source: string; target: string }> = [];
+
+    // Add products
+    if (productsRes.data) {
+      productsRes.data.forEach((p: any) => {
+        nodes.push({ id: p.id, name: p.name, type: 'product', logo_url: p.logo_url || company.logo_url });
+        edges.push({ source: companyId, target: p.id });
+      });
+    }
+
+    // Add investors
+    if (investorsRes.data) {
+      const addedInvestors = new Set<string>();
+      investorsRes.data.forEach((row: any) => {
+        if (row.investors && !addedInvestors.has(row.investors.id)) {
+          addedInvestors.add(row.investors.id);
+          nodes.push({ id: row.investors.id, name: row.investors.name, type: 'investor', logo_url: row.investors.logo_url });
+          edges.push({ source: companyId, target: row.investors.id });
+        }
+      });
+    }
+
+    // Add competitors
+    if (competitorsRes.data) {
+      competitorsRes.data.forEach((row: any) => {
+        if (row.competitor) {
+          nodes.push({ id: row.competitor.id, name: row.competitor.name, type: 'competitor', logo_url: row.competitor.logo_url });
+          edges.push({ source: companyId, target: row.competitor.id });
+        }
+      });
+    }
+
+    return { nodes, edges };
+  }
 }

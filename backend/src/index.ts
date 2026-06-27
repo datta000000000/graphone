@@ -10,6 +10,7 @@ import { investorsRouter } from './modules/investors/investors.router';
 import { productsRouter } from './modules/products/products.router';
 import { newsRouter } from './modules/news/news.router';
 import { statsRouter } from './modules/stats/stats.router';
+import { searchRouter } from './modules/search/search.router';
 
 const app = express();
 
@@ -38,6 +39,7 @@ app.use('/api/v1/investors', investorsRouter);
 app.use('/api/v1/products', productsRouter);
 app.use('/api/v1/news', newsRouter);
 app.use('/api/v1/stats', statsRouter);
+app.use('/api/v1/search', searchRouter);
 
 // Global Error Handler (Must be registered last)
 app.use(errorHandler);
