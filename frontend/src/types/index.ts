@@ -44,6 +44,8 @@ export interface Company {
   trending_score: number;
   view_count: number;
   tags: string[];
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface CompanyDetail extends Company {
@@ -72,6 +74,8 @@ export interface Investor {
   logo_url: string;
   avg_check_size: number | null;
   website: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface InvestorDetail extends Investor {

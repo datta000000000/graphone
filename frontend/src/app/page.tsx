@@ -3,21 +3,16 @@ import { Navbar } from '../components/layout/Navbar';
 import { Footer } from '../components/layout/Footer';
 import { DiscoverCompaniesClient } from '../components/companies/DiscoverCompaniesClient';
 import { Company, ApiResponse } from '../types';
+import { apiFetch } from '../lib/api';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api/v1';
 
 async function getStats() {
-  const res = await fetch(`${API_BASE}/stats`, { next: { revalidate: 60 } });
-  if (!res.ok) throw new Error('Failed to fetch stats');
-  const json: ApiResponse<any> = await res.json();
-  return json.data;
+  return apiFetch<any>('/stats', { next: { revalidate: 60 } });
 }
 
 async function getTrendingCompanies(): Promise<Company[]> {
-  const res = await fetch(`${API_BASE}/companies/trending`, { next: { revalidate: 60 } });
-  if (!res.ok) throw new Error('Failed to fetch trending companies');
-  const json: ApiResponse<Company[]> = await res.json();
-  return json.data;
+  return apiFetch<Company[]>('/companies/trending', { next: { revalidate: 60 } });
 }
 
 async function getCompanies(): Promise<{ items: Company[]; total: number; cursor: string | null }> {
@@ -31,25 +26,50 @@ async function getCompanies(): Promise<{ items: Company[]; total: number; cursor
   };
 }
 
+async function getInvestors(): Promise<any[]> {
+  return apiFetch<any[]>('/investors?limit=4');
+}
+
+async function getLatestNews(): Promise<any[]> {
+  const res = await fetch(`${API_BASE}/news?limit=3`, { next: { revalidate: 60 } });
+  if (!res.ok) return [];
+  const json = await res.json();
+  const data = json.data as any;
+  return Array.isArray(data) ? data : (data.items || []);
+}
+
+async function getLatestFunding(): Promise<any[]> {
+  const res = await fetch(`${API_BASE}/companies?limit=3&sort=funded`, { next: { revalidate: 60 } });
+  if (!res.ok) return [];
+  const json = await res.json();
+  return json.data || [];
+}
+
 export default async function Home() {
   try {
     // Run initial data queries in parallel
-    const [stats, trending, companiesData] = await Promise.all([
+    const [stats, trending, companiesData, investors, latestNews, latestFunding] = await Promise.all([
       getStats(),
       getTrendingCompanies(),
       getCompanies(),
+      getInvestors(),
+      getLatestNews(),
+      getLatestFunding(),
     ]);
 
     return (
       <div className="flex flex-col min-h-screen">
         <Navbar />
-        <main className="flex-grow bg-slate-50/30">
+        <main className="flex-grow bg-[#F7F3EC]">
           <DiscoverCompaniesClient
             initialTrending={trending}
             initialCompanies={companiesData.items}
             initialTotal={companiesData.total}
             initialCursor={companiesData.cursor}
             stats={stats}
+            featuredInvestors={investors}
+            latestNews={latestNews}
+            latestFunding={latestFunding}
           />
         </main>
         <Footer />
